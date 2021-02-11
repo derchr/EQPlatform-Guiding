@@ -1,9 +1,9 @@
 use embedded_time::duration::*;
 
-enum State {
+pub enum State {
     Track,
-    FastForward{ forward_direction: bool },
-    Halt,
+    FastForward(bool),
+    Hold,
 }
 
 pub struct EQTracker {
@@ -13,29 +13,17 @@ pub struct EQTracker {
 
 impl EQTracker {
     pub fn new(waiting_time: Microseconds) -> Self {
-        Self {
+        EQTracker {
             waiting_time,
             state: State::Track,
         }
     }
 
-    pub fn run(&self) {
-        match self.state {
-            State::Track => track(self.waiting_time),
-            State::Halt => halt(),
-            State::FastForward{ forward_direction } => fast_forward(forward_direction),
-        }
+    pub fn set_state(&mut self, state: State) {
+        self.state = state;
     }
-}
 
-fn track(waiting_time: Microseconds) {
-    
-}
-
-fn halt() {
-
-}
-
-fn fast_forward(forward_direction: bool) {
-
+    pub fn get_waiting_time(&self) -> Microseconds {
+        self.waiting_time
+    }
 }

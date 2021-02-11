@@ -6,14 +6,11 @@
 use embedded_time::duration::*;
 
 pub fn read_waiting_time() -> Microseconds {
-    Microseconds(10u32)
+    Microseconds(200000u32)
 }
 
 #[allow(dead_code)]
-pub fn write_waiting_time(_time: Microseconds) {
+pub fn write_waiting_time(_time: Microseconds) {}
 
-}
-
-pub fn increment_runtime() {
-
-}
+#[allow(dead_code)]
+pub fn increment_runtime() {}
