@@ -22,6 +22,7 @@ use hal::port::mode::*;
 use hal::port::*;
 use hal::prelude::*;
 use hal::usart::*;
+use hal::wdt::*;
 
 use embedded_time::duration::*;
 use staticvec::StaticString;
@@ -79,14 +80,15 @@ fn main() -> ! {
     let step_pin = portb.pb1.into_output(&mut portb.ddr);
     let mut dir_pin = portb.pb5.into_output(&mut portb.ddr);
     let tc1 = dp.TC1;
+    let eeprom_registers = dp.EEPROM;
 
     // Initialize the serial communication
     let mut serial_handler = serial::SerialHandler::new(dp.USART0, portd);
 
-    eeprom::increment_runtime();
+    eeprom::increment_startups(&eeprom_registers);
 
     // Get the last waiting time from eeprom
-    let waiting_time = eeprom::read_waiting_time();
+    let waiting_time = Microseconds(200000);//eeprom::read_waiting_time(&eeprom_registers);
 
     avr_device::interrupt::free(|cs| {
         TIMER_STRUCTURE.borrow(cs).replace(Some(TimerStructure {
@@ -111,6 +113,14 @@ fn main() -> ! {
     // Create the state machine
     let mut eq_tracker = state_machine::EQTracker::new(waiting_time);
 
+    // The state machine is per default in the Tracking state, so we
+    // also want to enable the positive direction pin.
+    dir_pin.set_high().void_unwrap();
+
+    // Initialize a watchdog
+    let mut watchdog = Wdt::new(&dp.CPU.mcusr, dp.WDT);
+    watchdog.start(Timeout::Ms125);
+
     loop {
         let input = serial_handler.handle_input();
 
@@ -121,44 +131,62 @@ fn main() -> ! {
                 timer::set_duration(eq_tracker.get_waiting_time());
                 timer::set_timer_status(true);
                 dir_pin.set_high().void_unwrap();
-            },
+            }
+
             Some(InputVariant::TrackNewTime(duration)) => {
                 serial_handler.write_str("Track with new duration: ");
                 serial_handler.write_number(*duration.integer());
                 serial_handler.write_str("us\n");
                 eq_tracker.set_state(State::Track);
+                eq_tracker.set_waiting_time(duration);
                 timer::set_duration(duration);
                 timer::set_timer_status(true);
                 dir_pin.set_high().void_unwrap();
-            },
+            }
+
             Some(InputVariant::Hold) => {
                 serial_handler.write_str("Hold Hold Hold!\n");
                 eq_tracker.set_state(State::Hold);
                 timer::set_timer_status(false);
-            },
+            }
+
             Some(InputVariant::FastForward(direction)) => {
                 serial_handler.write_str("Fast Forward Mode!\n");
                 eq_tracker.set_state(State::FastForward(direction));
-                timer::set_duration(Microseconds(100));
+                timer::set_duration(Microseconds(1200));
                 timer::set_timer_status(true);
                 if direction {
                     dir_pin.set_high().void_unwrap();
                 } else {
                     dir_pin.set_low().void_unwrap();
                 }
-            },
+            }
+
             Some(InputVariant::SetDefault) => {
                 serial_handler.write_str("Write Default Value!\n");
-                // ... TODO
-            },
+                eeprom::write_waiting_time(eq_tracker.get_waiting_time(), &eeprom_registers);
+            }
+
             Some(InputVariant::Status) => {
-                serial_handler.send_status(*eq_tracker.get_waiting_time().integer(), 12, 12)
-            },
-            Some(InputVariant::Invalid) => {
-                serial_handler.write_str("Invalid operation!\n")
-            },
+                serial_handler.send_status(
+                    *eq_tracker.get_waiting_time().integer(),
+                    *eeprom::read_waiting_time(&eeprom_registers).integer(),
+                    eeprom::read_startups(&eeprom_registers)
+                )
+            }
+
+            Some(InputVariant::Invalid) => serial_handler.write_str("Invalid operation!\n"),
+
+            Some(InputVariant::Reset) => {
+                serial_handler.write_str("Reset!\n");
+                // Let the watchdog starve.
+                loop {}
+            }
 
             None => (),
         }
+
+        // Feed the watchdog
+        watchdog.feed();
     }
 }

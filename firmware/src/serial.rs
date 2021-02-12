@@ -21,6 +21,7 @@ pub enum InputVariant {
     FastForward(bool),
     SetDefault,
     Status,
+    Reset,
     Invalid,
 }
 
@@ -84,7 +85,7 @@ impl SerialHandler {
         ufmt::uwrite!(self.usart0_tx, "{}", value).ok();
     }
 
-    pub fn send_status(&mut self, current: u32, default: u32, starts: u32) {
+    pub fn send_status(&mut self, current_time: u32, default_time: u32, starts: u32) {
         ufmt::uwriteln!(
             self.usart0_tx,
             "\n\n\
@@ -97,8 +98,8 @@ impl SerialHandler {
             ~                                           ~\n\
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
             env!("CARGO_PKG_VERSION"),
-            current,
-            default,
+            current_time,
+            default_time,
             starts,
         )
         .ok();
@@ -138,6 +139,9 @@ fn parse_input(input: &str) -> InputVariant {
 
         // Print some status info.
         Err(Some('s')) => InputVariant::Status,
+
+        // Reset chip.
+        Err(Some('r')) => InputVariant::Reset,
 
         // If all checks fail the user hasn't inputted anything valid.
         _ => InputVariant::Invalid,

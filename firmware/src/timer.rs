@@ -48,19 +48,25 @@ pub fn set_timer_status(active: bool) {
 }
 
 pub fn set_duration(duration: Microseconds) {
+    avr_device::interrupt::free(|cs| {
+        set_duration_in_cs(duration, cs);
+    });
+}
+
+fn set_duration_in_cs(duration: Microseconds, cs: &avr_device::interrupt::CriticalSection) {
     let time = *duration.integer();
 
     // The register is exactly 16 bits wide.
-    let compare_value: u16 = (time / 4) as u16;
-
-    avr_device::interrupt::free(|cs| {
-        if let Some(ref mut timer_struct) = TIMER_STRUCTURE.borrow(cs).borrow_mut().deref_mut() {
-            timer_struct
-                .tc1
-                .ocr1a
-                .write(|w| unsafe { w.bits(compare_value) });
-        }
-    });
+    // We first divide by 4 to convert the microseconds to the binary format
+    // and then divide by 2 to achieve a time period of the specified time.
+    let compare_value: u16 = (time / 8) as u16;
+    
+    if let Some(ref mut timer_struct) = TIMER_STRUCTURE.borrow(cs).borrow_mut().deref_mut() {
+        timer_struct
+            .tc1
+            .ocr1a
+            .write(|w| unsafe { w.bits(compare_value) });
+    }
 }
 
 #[avr_device::interrupt(atmega328p)]
@@ -70,11 +76,9 @@ fn TIMER1_COMPA() {
             if timer_struct.pin_is_high {
                 timer_struct.pin.set_low().void_unwrap();
                 timer_struct.pin_is_high = false;
-                //set_duration(Microseconds(timer_struct.waiting_time.integer() / 2));
             } else {
                 timer_struct.pin.set_high().void_unwrap();
                 timer_struct.pin_is_high = true;
-                //set_duration(Microseconds(timer_struct.waiting_time.integer() / 2));
             }
         }
     });

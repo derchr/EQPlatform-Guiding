@@ -1,5 +1,5 @@
 # EQPlatform-PulseGuiding
-This is a private project, that I am currently working on. The project contains the firmware for an AVR microcontroller and an INDI driver. The firmware controls the homemade equatorial platform and the INDI driver is used to let the µC communicate with guiding tools such as Ekos (Kstars) or PHD2.
+This is a private project, that I am currently working on. The project contains the firmware for an AVR microcontroller and an INDI driver. The firmware controls the homemade equatorial platform and the INDI driver is used to let the µC communicate with guiding tools such as Ekos (Kstars) or PHD2. (This feature is work in progress.)
 It should also work with various other homemade mounts (eg. barn door trackers...)
 ### Building
 #### AVR Hex File

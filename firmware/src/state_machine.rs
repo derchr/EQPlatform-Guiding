@@ -26,4 +26,8 @@ impl EQTracker {
     pub fn get_waiting_time(&self) -> Microseconds {
         self.waiting_time
     }
+
+    pub fn set_waiting_time(&mut self, duration: Microseconds) {
+        self.waiting_time = duration;
+    }
 }
