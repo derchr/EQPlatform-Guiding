@@ -2,7 +2,7 @@
 This is a private project, that I am currently working on. The project contains the firmware for an AVR microcontroller and an INDI driver. The firmware controls the homemade equatorial platform and the INDI driver is used to let the µC communicate with guiding tools such as Ekos (Kstars) or PHD2. (This feature is work in progress.)
 It should also work with various other homemade mounts (eg. barn door trackers...)
 
-The microcontroller firmware was ported to Rust, thanks to Rahix's amazing work on AVR HAL. The guiding pulses aren't implemented into the firmware yet.
+The microcontroller firmware was ported to Rust, thanks to [Rahix](https://github.com/Rahix/)'s amazing work on AVR HAL. The guiding pulses aren't implemented into the firmware yet.
 ### Building
 #### AVR Hex File
 See [Rahix's AVR HAL Readme](https://github.com/Rahix/avr-hal#readme) to learn how to setup the Rust development environment for AVR microcontrollers.
