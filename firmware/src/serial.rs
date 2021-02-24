@@ -92,8 +92,8 @@ impl SerialHandler {
             ~~~~~~~~~~ EQPlatform-PulseGuiding ~~~~~~~~~~\n\
             ~                                           ~\n\
             ~          Firmware-Version: {}          ~\n\
-            ~           Current Velocity: {}            ~\n\
-            ~           Default Velocity: {}            ~\n\
+            ~           Current Velocity: {}         ~\n\
+            ~           Default Velocity: {}         ~\n\
             ~           Number of starts: {}            ~\n\
             ~                                           ~\n\
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
@@ -113,7 +113,7 @@ fn parse_input(input: &str) -> InputVariant {
     working, but "track" not. Also passing "track" directly into the
     parse_input() function did work as expected. However creating a
     StaticString from "track" and then giving back the &str type did
-    not work. This is a dirty workaround. */
+    not work. Only checking the first char is a workaround. */
 
     match input.parse::<u32>().map_err(|_| input.chars().nth(0)) {
         // First lets see if our string is a number. Then the
@@ -170,15 +170,5 @@ mod serial_isr {
                 }
             }
         });
-    }
-
-    #[avr_device::interrupt(atmega328p)]
-    fn USART_UDRE() {
-        /*use crate::{LED_PIN, SERIAL};
-        avr_device::interrupt::free(|cs| {
-            if let Some(ref mut pin) = LED_PIN.borrow(cs).borrow_mut().deref_mut() {
-                pin.toggle();
-            }
-        });*/
     }
 }

@@ -60,7 +60,7 @@ fn set_duration_in_cs(duration: Microseconds, cs: &avr_device::interrupt::Critic
     // We first divide by 4 to convert the microseconds to the binary format
     // and then divide by 2 to achieve a time period of the specified time.
     let compare_value: u16 = (time / 8) as u16;
-    
+
     if let Some(ref mut timer_struct) = TIMER_STRUCTURE.borrow(cs).borrow_mut().deref_mut() {
         timer_struct
             .tc1

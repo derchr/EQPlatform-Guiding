@@ -88,7 +88,7 @@ fn main() -> ! {
     eeprom::increment_startups(&eeprom_registers);
 
     // Get the last waiting time from eeprom
-    let waiting_time = Microseconds(200000);//eeprom::read_waiting_time(&eeprom_registers);
+    let waiting_time = eeprom::read_waiting_time(&eeprom_registers);
 
     avr_device::interrupt::free(|cs| {
         TIMER_STRUCTURE.borrow(cs).replace(Some(TimerStructure {
@@ -119,7 +119,7 @@ fn main() -> ! {
 
     // Initialize a watchdog
     let mut watchdog = Wdt::new(&dp.CPU.mcusr, dp.WDT);
-    watchdog.start(Timeout::Ms125);
+    watchdog.start(Timeout::Ms500);
 
     loop {
         let input = serial_handler.handle_input();
@@ -167,13 +167,11 @@ fn main() -> ! {
                 eeprom::write_waiting_time(eq_tracker.get_waiting_time(), &eeprom_registers);
             }
 
-            Some(InputVariant::Status) => {
-                serial_handler.send_status(
-                    *eq_tracker.get_waiting_time().integer(),
-                    *eeprom::read_waiting_time(&eeprom_registers).integer(),
-                    eeprom::read_startups(&eeprom_registers)
-                )
-            }
+            Some(InputVariant::Status) => serial_handler.send_status(
+                *eq_tracker.get_waiting_time().integer(),
+                *eeprom::read_waiting_time(&eeprom_registers).integer(),
+                eeprom::read_startups(&eeprom_registers),
+            ),
 
             Some(InputVariant::Invalid) => serial_handler.write_str("Invalid operation!\n"),
 
