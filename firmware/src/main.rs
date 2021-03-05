@@ -79,6 +79,15 @@ fn main() -> ! {
 
     let step_pin = portb.pb1.into_output(&mut portb.ddr);
     let mut dir_pin = portb.pb5.into_output(&mut portb.ddr);
+
+    // 1/32 steps
+    let mut m0_pin = portb.pb1.into_output(&mut portb.ddr);
+    let mut m1_pin = portb.pb2.into_output(&mut portb.ddr);
+    let mut m2_pin = portb.pb3.into_output(&mut portb.ddr);
+    m0_pin.set_high();
+    m1_pin.set_high();
+    m2_pin.set_high();
+
     let tc1 = dp.TC1;
     let eeprom_registers = dp.EEPROM;
 

@@ -33,11 +33,7 @@ pub fn increment_startups(eeprom_registers: &EEPROM) {
     let mut startups = read_startups(eeprom_registers);
 
     // Explicit overflow
-    if startups == 0xFFFF_FFFF {
-        startups = 0;
-    } else {
-        startups += 1;
-    }
+    startups.overflowing_add(1);
 
     let startups = startups.to_be_bytes();
 
@@ -103,4 +99,9 @@ fn u8_to_u32(number_array: [u8; 4]) -> u32 {
     result += number_array[3] as u32;
 
     result
+}
+
+#[test]
+fn test_conversion() {
+    assert_eq!(u8_to_u32([0, 0, 0, 0]), 0);
 }
