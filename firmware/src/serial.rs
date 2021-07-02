@@ -21,6 +21,7 @@ pub enum InputVariant {
     FastForward(bool),
     SetDefault,
     Status,
+    BinaryStatus,
     Reset,
     Invalid,
 }
@@ -104,6 +105,17 @@ impl SerialHandler {
         )
         .ok();
     }
+
+    pub fn send_binary_status(&mut self, current_time: u32, default_time: u32, starts: u32) {
+        ufmt::uwriteln!(
+            self.usart0_tx,
+            "{}\n{}\n{}\n",
+            current_time,
+            default_time,
+            starts,
+        )
+        .ok();
+    }
 }
 
 fn parse_input(input: &str) -> InputVariant {
@@ -139,6 +151,9 @@ fn parse_input(input: &str) -> InputVariant {
 
         // Print some status info.
         Err(Some('s')) => InputVariant::Status,
+
+        // Print some binary status info.
+        Err(Some('b')) => InputVariant::BinaryStatus,
 
         // Reset chip.
         Err(Some('r')) => InputVariant::Reset,

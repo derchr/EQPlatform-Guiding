@@ -56,7 +56,7 @@ struct SerialBuffer {
 /// Timer struct that hold the timer register (it has to be altered in an ISR)
 /// and the corresponding timer pin which is conrtolled by the timer.
 struct TimerStructure {
-    pin: portb::PB1<Output>,
+    pin: portb::PB0<Output>,
     pin_is_high: bool,
     tc1: hal::pac::TC1,
 }
@@ -77,7 +77,7 @@ fn main() -> ! {
     let mut portb = dp.PORTB.split();
     let portd = dp.PORTD.split();
 
-    let step_pin = portb.pb1.into_output(&mut portb.ddr);
+    let step_pin = portb.pb0.into_output(&mut portb.ddr);
     let mut dir_pin = portb.pb5.into_output(&mut portb.ddr);
 
     // 1/32 steps
@@ -177,6 +177,12 @@ fn main() -> ! {
             }
 
             Some(InputVariant::Status) => serial_handler.send_status(
+                *eq_tracker.get_waiting_time().integer(),
+                *eeprom::read_waiting_time(&eeprom_registers).integer(),
+                eeprom::read_startups(&eeprom_registers),
+            ),
+
+            Some(InputVariant::BinaryStatus) => serial_handler.send_binary_status(
                 *eq_tracker.get_waiting_time().integer(),
                 *eeprom::read_waiting_time(&eeprom_registers).integer(),
                 eeprom::read_startups(&eeprom_registers),
